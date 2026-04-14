@@ -1,0 +1,74 @@
+{
+  "task": "Ticket P1 được tạo lúc 22:47. Ai sẽ nhận thông báo đầu tiên và qua kênh nào? Escalation xảy ra lúc mấy giờ?",
+  "route_reason": "default route: factual lookup / retrieval | risk_high flagged",
+  "risk_high": true,
+  "needs_tool": false,
+  "hitl_triggered": false,
+  "retrieved_chunks": [
+    {
+      "text": "Ticket P1:\n- Phản hồi ban đầu (first response): 15 phút kể từ khi ticket được tạo.\n- Xử lý và khắc phục (resolution): 4 giờ.\n- Escalation: Tự động escalate lên Senior Engineer nếu không có phản hồi trong 10 phút.\n- Thông báo stakeholder: Ngay khi nhận ticket, update mỗi 30 phút cho đến khi resolve.\n\nTicket P2:\n- Phản hồi ban đầu: 2 giờ.\n- Xử lý và khắc phục: 1 ngày làm việc.\n- Escalation: Tự động escalate sau 90 phút không có phản hồi.\n\nTicket P3:\n- Phản hồi ban đầu: 1 ngày làm việc.\n- Xử lý và khắc phục: 5 ngày làm việc.\n\nTicket P4:\n- Phản hồi ban đầu: 3 ngày làm việc.\n- Xử lý và khắc phục: Theo sprint cycle (thông thường 2-4 tuần).",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.6774,
+      "metadata": {
+        "effective_date": "2026-01-15",
+        "section": "Phần 2: SLA theo mức độ ưu tiên",
+        "access": "internal",
+        "department": "IT",
+        "source": "support/sla-p1-2026.pdf"
+      }
+    },
+    {
+      "text": "Ticket system: Jira (project IT-SUPPORT)\nSlack channel: #incident-p1, #incident-p2\nPagerDuty: Tự động nhắn on-call khi P1 ticket mới\nHotline on-call: ext. 9999 (24/7)",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.6169,
+      "metadata": {
+        "source": "support/sla-p1-2026.pdf",
+        "section": "Phần 4: Công cụ và kênh liên lạc",
+        "effective_date": "2026-01-15",
+        "department": "IT",
+        "access": "internal"
+      }
+    },
+    {
+      "text": "Escalation chỉ áp dụng khi cần thay đổi quyền hệ thống ngoài quy trình thông thường.\nVí dụ: Khẩn cấp trong sự cố P1, cần cấp quyền tạm thời để fix incident.\n\nQuy trình escalation khẩn cấp:\n1. On-call IT Admin có thể cấp quyền tạm thời (max 24 giờ) sau khi được Tech Lead phê duyệt bằng lời.\n2. Sau 24 giờ, phải có ticket chính thức hoặc quyền bị thu hồi tự động.\n3. Mọi quyền tạm thời phải được ghi log vào hệ thống Security Audit.",
+      "source": "it/access-control-sop.md",
+      "score": 0.5797,
+      "metadata": {
+        "department": "IT Security",
+        "access": "internal",
+        "source": "it/access-control-sop.md",
+        "effective_date": "2026-01-01",
+        "section": "Section 4: Escalation khi cần thay đổi quyền hệ thống"
+      }
+    }
+  ],
+  "retrieved_sources": [
+    "support/sla-p1-2026.pdf",
+    "it/access-control-sop.md"
+  ],
+  "policy_result": {},
+  "mcp_tools_used": [],
+  "human_decision": {},
+  "final_answer": "1. **Ai sẽ nhận thông báo đầu tiên và qua kênh nào?**\n   - Người on-call sẽ nhận thông báo đầu tiên qua kênh PagerDuty khi ticket P1 được tạo. [2]\n\n2. **Escalation xảy ra lúc mấy giờ?**\n   - Escalation sẽ xảy ra sau 10 phút nếu không có phản hồi. Do ticket được tạo lúc 22:47, escalation sẽ xảy ra lúc 22:57. [1]",
+  "sources": [
+    "support/sla-p1-2026.pdf",
+    "it/access-control-sop.md"
+  ],
+  "confidence": 0.62,
+  "history": [
+    "[supervisor] received task: Ticket P1 được tạo lúc 22:47. Ai sẽ nhận thông báo đầu tiên và qua kênh nào? Escalation xảy ra lúc mấy giờ?",
+    "[supervisor] route=retrieval_worker reason=default route: factual lookup / retrieval | risk_high flagged",
+    "[retrieval_worker] retrieved 3 chunks from ['support/sla-p1-2026.pdf', 'it/access-control-sop.md']",
+    "[synthesis_worker] answer generated, confidence=0.62, sources=['support/sla-p1-2026.pdf', 'it/access-control-sop.md']",
+    "[graph] completed in 8307ms"
+  ],
+  "workers_called": [
+    "retrieval_worker",
+    "synthesis_worker"
+  ],
+  "supervisor_route": "retrieval_worker",
+  "latency_ms": 8307,
+  "run_id": "run_20260414_170904",
+  "started_at_ms": 1776161344612,
+  "question_id": "q11"
+}

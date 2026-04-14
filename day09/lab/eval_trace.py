@@ -23,7 +23,7 @@ from typing import Optional
 
 # Import graph
 sys.path.insert(0, os.path.dirname(__file__))
-from graph import run_graph, save_trace
+from graph import run_graph, save_trace, resume_graph
 
 
 # ─────────────────────────────────────────────
@@ -52,6 +52,24 @@ def run_test_questions(questions_file: str = "data/test_questions.json") -> list
 
         try:
             result = run_graph(question_text)
+            if "__interrupt__" in result:
+                run_id = result["run_id"]
+                print("  Status     : INTERRUPTED")
+                print(f"  Route      : {result.get('supervisor_route')}")
+                print(f"  Reason     : {result.get('route_reason')}")
+                print(f"  Interrupt  : {result['__interrupt__']}")
+
+                approve_raw = input("Approve? (y/n): ").strip().lower()
+                notes = input("Notes: ").strip()
+
+                human_decision = {
+                    "approved": approve_raw in {"y", "yes"},
+                    "reviewer": "terminal_user",
+                    "notes": notes,
+                }
+
+                result = resume_graph(run_id, human_decision)
+
             result["question_id"] = q_id
 
             # Save individual trace
@@ -185,7 +203,7 @@ def analyze_traces(traces_dir: str = "artifacts/traces") -> dict:
 
     traces = []
     for fname in trace_files:
-        with open(os.path.join(traces_dir, fname)) as f:
+        with open(os.path.join(traces_dir, fname), encoding="utf-8") as f:
             traces.append(json.load(f))
 
     # Compute metrics

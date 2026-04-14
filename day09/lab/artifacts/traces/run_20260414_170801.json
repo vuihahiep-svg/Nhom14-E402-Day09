@@ -1,0 +1,72 @@
+{
+  "task": "Ticket P1 không được phản hồi sau 10 phút. Hệ thống tự động làm gì?",
+  "route_reason": "default route: factual lookup / retrieval | risk_high flagged",
+  "risk_high": true,
+  "needs_tool": false,
+  "hitl_triggered": false,
+  "retrieved_chunks": [
+    {
+      "text": "Ticket P1:\n- Phản hồi ban đầu (first response): 15 phút kể từ khi ticket được tạo.\n- Xử lý và khắc phục (resolution): 4 giờ.\n- Escalation: Tự động escalate lên Senior Engineer nếu không có phản hồi trong 10 phút.\n- Thông báo stakeholder: Ngay khi nhận ticket, update mỗi 30 phút cho đến khi resolve.\n\nTicket P2:\n- Phản hồi ban đầu: 2 giờ.\n- Xử lý và khắc phục: 1 ngày làm việc.\n- Escalation: Tự động escalate sau 90 phút không có phản hồi.\n\nTicket P3:\n- Phản hồi ban đầu: 1 ngày làm việc.\n- Xử lý và khắc phục: 5 ngày làm việc.\n\nTicket P4:\n- Phản hồi ban đầu: 3 ngày làm việc.\n- Xử lý và khắc phục: Theo sprint cycle (thông thường 2-4 tuần).",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.7234,
+      "metadata": {
+        "section": "Phần 2: SLA theo mức độ ưu tiên",
+        "effective_date": "2026-01-15",
+        "source": "support/sla-p1-2026.pdf",
+        "access": "internal",
+        "department": "IT"
+      }
+    },
+    {
+      "text": "Ticket system: Jira (project IT-SUPPORT)\nSlack channel: #incident-p1, #incident-p2\nPagerDuty: Tự động nhắn on-call khi P1 ticket mới\nHotline on-call: ext. 9999 (24/7)",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.6184,
+      "metadata": {
+        "department": "IT",
+        "access": "internal",
+        "source": "support/sla-p1-2026.pdf",
+        "effective_date": "2026-01-15",
+        "section": "Phần 4: Công cụ và kênh liên lạc"
+      }
+    },
+    {
+      "text": "Bước 1: Tiếp nhận\nOn-call engineer nhận alert hoặc ticket, xác nhận severity trong 5 phút.\n\nBước 2: Thông báo\nGửi thông báo tới Slack #incident-p1 và email incident@company.internal ngay lập tức.\n\nBước 3: Triage và phân công\nLead Engineer phân công engineer xử lý trong 10 phút.\n\nBước 4: Xử lý\nEngineer cập nhật tiến độ lên ticket mỗi 30 phút. Nếu cần hỗ trợ thêm, escalate ngay.\n\nBước 5: Resolution\nSau khi khắc phục, viết incident report trong vòng 24 giờ.",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.5432,
+      "metadata": {
+        "source": "support/sla-p1-2026.pdf",
+        "department": "IT",
+        "effective_date": "2026-01-15",
+        "section": "Phần 3: Quy trình xử lý sự cố P1",
+        "access": "internal"
+      }
+    }
+  ],
+  "retrieved_sources": [
+    "support/sla-p1-2026.pdf"
+  ],
+  "policy_result": {},
+  "mcp_tools_used": [],
+  "human_decision": {},
+  "final_answer": "Nếu ticket P1 không được phản hồi sau 10 phút, hệ thống sẽ tự động escalate lên Senior Engineer. [1]",
+  "sources": [
+    "support/sla-p1-2026.pdf"
+  ],
+  "confidence": 0.63,
+  "history": [
+    "[supervisor] received task: Ticket P1 không được phản hồi sau 10 phút. Hệ thống tự động làm gì?",
+    "[supervisor] route=retrieval_worker reason=default route: factual lookup / retrieval | risk_high flagged",
+    "[retrieval_worker] retrieved 3 chunks from ['support/sla-p1-2026.pdf']",
+    "[synthesis_worker] answer generated, confidence=0.63, sources=['support/sla-p1-2026.pdf']",
+    "[graph] completed in 6932ms"
+  ],
+  "workers_called": [
+    "retrieval_worker",
+    "synthesis_worker"
+  ],
+  "supervisor_route": "retrieval_worker",
+  "latency_ms": 6932,
+  "run_id": "run_20260414_170801",
+  "started_at_ms": 1776161281775,
+  "question_id": "q06"
+}

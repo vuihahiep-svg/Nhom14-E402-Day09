@@ -1,0 +1,81 @@
+{
+  "task": "ERR-403-AUTH là lỗi gì và cách xử lý?",
+  "route_reason": "unknown error code + risk_high → human review | human approved → retrieval",
+  "risk_high": true,
+  "needs_tool": false,
+  "hitl_triggered": true,
+  "retrieved_chunks": [
+    {
+      "text": "P1 — CRITICAL (Khẩn cấp):\nĐịnh nghĩa: Sự cố ảnh hưởng toàn bộ hệ thống production, không có workaround.\nVí dụ: Database sập, API gateway down, toàn bộ người dùng không thể đăng nhập.\n\nP2 — HIGH (Nghiêm trọng):\nĐịnh nghĩa: Sự cố ảnh hưởng một phần hệ thống, có workaround tạm thời.\nVí dụ: Một số tính năng không hoạt động, ảnh hưởng một nhóm người dùng.\n\nP3 — MEDIUM (Trung bình):\nĐịnh nghĩa: Lỗi ảnh hưởng không đáng kể, người dùng vẫn làm việc được.\n\nP4 — LOW (Thấp):\nĐịnh nghĩa: Yêu cầu cải tiến, gợi ý, hoặc lỗi giao diện nhỏ.",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.5144,
+      "metadata": {
+        "effective_date": "2026-01-15",
+        "section": "Phần 1: Định nghĩa mức độ ưu tiên",
+        "department": "IT",
+        "source": "support/sla-p1-2026.pdf",
+        "access": "internal"
+      }
+    },
+    {
+      "text": "Escalation chỉ áp dụng khi cần thay đổi quyền hệ thống ngoài quy trình thông thường.\nVí dụ: Khẩn cấp trong sự cố P1, cần cấp quyền tạm thời để fix incident.\n\nQuy trình escalation khẩn cấp:\n1. On-call IT Admin có thể cấp quyền tạm thời (max 24 giờ) sau khi được Tech Lead phê duyệt bằng lời.\n2. Sau 24 giờ, phải có ticket chính thức hoặc quyền bị thu hồi tự động.\n3. Mọi quyền tạm thời phải được ghi log vào hệ thống Security Audit.",
+      "source": "it/access-control-sop.md",
+      "score": 0.469,
+      "metadata": {
+        "source": "it/access-control-sop.md",
+        "section": "Section 4: Escalation khi cần thay đổi quyền hệ thống",
+        "access": "internal",
+        "effective_date": "2026-01-01",
+        "department": "IT Security"
+      }
+    },
+    {
+      "text": "Ticket P1:\n- Phản hồi ban đầu (first response): 15 phút kể từ khi ticket được tạo.\n- Xử lý và khắc phục (resolution): 4 giờ.\n- Escalation: Tự động escalate lên Senior Engineer nếu không có phản hồi trong 10 phút.\n- Thông báo stakeholder: Ngay khi nhận ticket, update mỗi 30 phút cho đến khi resolve.\n\nTicket P2:\n- Phản hồi ban đầu: 2 giờ.\n- Xử lý và khắc phục: 1 ngày làm việc.\n- Escalation: Tự động escalate sau 90 phút không có phản hồi.\n\nTicket P3:\n- Phản hồi ban đầu: 1 ngày làm việc.\n- Xử lý và khắc phục: 5 ngày làm việc.\n\nTicket P4:\n- Phản hồi ban đầu: 3 ngày làm việc.\n- Xử lý và khắc phục: Theo sprint cycle (thông thường 2-4 tuần).",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.4591,
+      "metadata": {
+        "section": "Phần 2: SLA theo mức độ ưu tiên",
+        "source": "support/sla-p1-2026.pdf",
+        "effective_date": "2026-01-15",
+        "access": "internal",
+        "department": "IT"
+      }
+    }
+  ],
+  "retrieved_sources": [
+    "support/sla-p1-2026.pdf",
+    "it/access-control-sop.md"
+  ],
+  "policy_result": {},
+  "mcp_tools_used": [],
+  "human_decision": {
+    "approved": true,
+    "reviewer": "terminal_user",
+    "notes": "ok"
+  },
+  "final_answer": "Không đủ thông tin trong tài liệu nội bộ về lỗi ERR-403-AUTH và cách xử lý.",
+  "sources": [
+    "support/sla-p1-2026.pdf",
+    "it/access-control-sop.md"
+  ],
+  "confidence": 0.3,
+  "history": [
+    "[supervisor] received task: ERR-403-AUTH là lỗi gì và cách xử lý?",
+    "[supervisor] route=human_review reason=unknown error code + risk_high → human review",
+    "[human_review] HITL triggered — graph paused for approval",
+    "[human_review] resumed by reviewer=terminal_user approved=True notes=ok",
+    "[retrieval_worker] retrieved 3 chunks from ['support/sla-p1-2026.pdf', 'it/access-control-sop.md']",
+    "[synthesis_worker] answer generated, confidence=0.3, sources=['support/sla-p1-2026.pdf', 'it/access-control-sop.md']",
+    "[graph] completed in 10063ms"
+  ],
+  "workers_called": [
+    "human_review",
+    "retrieval_worker",
+    "synthesis_worker"
+  ],
+  "supervisor_route": "retrieval_worker",
+  "latency_ms": 10063,
+  "run_id": "run_20260414_170839",
+  "started_at_ms": 1776161319745,
+  "question_id": "q09"
+}

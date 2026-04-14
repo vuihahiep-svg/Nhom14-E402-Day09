@@ -1,0 +1,72 @@
+{
+  "task": "SLA xử lý ticket P1 là bao lâu?",
+  "route_reason": "default route: factual lookup / retrieval | risk_high flagged",
+  "risk_high": true,
+  "needs_tool": false,
+  "hitl_triggered": false,
+  "retrieved_chunks": [
+    {
+      "text": "Ticket P1:\n- Phản hồi ban đầu (first response): 15 phút kể từ khi ticket được tạo.\n- Xử lý và khắc phục (resolution): 4 giờ.\n- Escalation: Tự động escalate lên Senior Engineer nếu không có phản hồi trong 10 phút.\n- Thông báo stakeholder: Ngay khi nhận ticket, update mỗi 30 phút cho đến khi resolve.\n\nTicket P2:\n- Phản hồi ban đầu: 2 giờ.\n- Xử lý và khắc phục: 1 ngày làm việc.\n- Escalation: Tự động escalate sau 90 phút không có phản hồi.\n\nTicket P3:\n- Phản hồi ban đầu: 1 ngày làm việc.\n- Xử lý và khắc phục: 5 ngày làm việc.\n\nTicket P4:\n- Phản hồi ban đầu: 3 ngày làm việc.\n- Xử lý và khắc phục: Theo sprint cycle (thông thường 2-4 tuần).",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.6905,
+      "metadata": {
+        "access": "internal",
+        "source": "support/sla-p1-2026.pdf",
+        "effective_date": "2026-01-15",
+        "section": "Phần 2: SLA theo mức độ ưu tiên",
+        "department": "IT"
+      }
+    },
+    {
+      "text": "v2026.1 (2026-01-15): Cập nhật SLA P1 resolution từ 6 giờ xuống 4 giờ.\nv2025.3 (2025-09-01): Thêm quy trình escalation tự động.\nv2025.1 (2025-03-01): Phiên bản đầu tiên.",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.5965,
+      "metadata": {
+        "department": "IT",
+        "source": "support/sla-p1-2026.pdf",
+        "effective_date": "2026-01-15",
+        "access": "internal",
+        "section": "Phần 5: Lịch sử phiên bản"
+      }
+    },
+    {
+      "text": "Ticket system: Jira (project IT-SUPPORT)\nSlack channel: #incident-p1, #incident-p2\nPagerDuty: Tự động nhắn on-call khi P1 ticket mới\nHotline on-call: ext. 9999 (24/7)",
+      "source": "support/sla-p1-2026.pdf",
+      "score": 0.5847,
+      "metadata": {
+        "effective_date": "2026-01-15",
+        "section": "Phần 4: Công cụ và kênh liên lạc",
+        "department": "IT",
+        "access": "internal",
+        "source": "support/sla-p1-2026.pdf"
+      }
+    }
+  ],
+  "retrieved_sources": [
+    "support/sla-p1-2026.pdf"
+  ],
+  "policy_result": {},
+  "mcp_tools_used": [],
+  "human_decision": {},
+  "final_answer": "SLA xử lý ticket P1 như sau:\n\n1. **Phản hồi ban đầu**: 15 phút kể từ khi ticket được tạo.\n2. **Xử lý và khắc phục**: 4 giờ.\n3. **Escalation**: Tự động escalate lên Senior Engineer nếu không có phản hồi trong 10 phút.\n4. **Thông báo stakeholder**: Ngay khi nhận ticket, update mỗi 30 phút cho đến khi resolve. [1]",
+  "sources": [
+    "support/sla-p1-2026.pdf"
+  ],
+  "confidence": 0.62,
+  "history": [
+    "[supervisor] received task: SLA xử lý ticket P1 là bao lâu?",
+    "[supervisor] route=retrieval_worker reason=default route: factual lookup / retrieval | risk_high flagged",
+    "[retrieval_worker] retrieved 3 chunks from ['support/sla-p1-2026.pdf']",
+    "[synthesis_worker] answer generated, confidence=0.62, sources=['support/sla-p1-2026.pdf']",
+    "[graph] completed in 13263ms"
+  ],
+  "workers_called": [
+    "retrieval_worker",
+    "synthesis_worker"
+  ],
+  "supervisor_route": "retrieval_worker",
+  "latency_ms": 13263,
+  "run_id": "run_20260414_170703",
+  "started_at_ms": 1776161223212,
+  "question_id": "q01"
+}

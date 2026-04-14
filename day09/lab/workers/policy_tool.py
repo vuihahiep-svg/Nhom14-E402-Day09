@@ -16,9 +16,17 @@ Gọi độc lập để test:
     python workers/policy_tool.py
 """
 
+import asyncio
 import os
 import sys
-from typing import Optional
+from typing import Optional, Any
+from fastmcp import Client
+from datetime import datetime
+import json
+from openai import OpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 WORKER_NAME = "policy_tool_worker"
 
@@ -27,126 +35,241 @@ WORKER_NAME = "policy_tool_worker"
 # MCP Client — Sprint 3: Thay bằng real MCP call
 # ─────────────────────────────────────────────
 
-def _call_mcp_tool(tool_name: str, tool_input: dict) -> dict:
+async def _call_mcp_tool(
+    tool_name: str,
+    tool_input: dict[str, Any],
+    server_url: str = "http://127.0.0.1:8001/mcp",
+    timeout: float = 10.0,
+) -> dict[str, Any]:
     """
-    Gọi MCP tool.
-
-    Sprint 3 TODO: Implement bằng cách import mcp_server hoặc gọi HTTP.
-
-    Hiện tại: Import trực tiếp từ mcp_server.py (trong-process mock).
+    Gọi MCP tool qua FastMCP HTTP client.
     """
-    from datetime import datetime
-
     try:
-        # TODO Sprint 3: Thay bằng real MCP client nếu dùng HTTP server
-        from mcp_server import dispatch_tool
-        result = dispatch_tool(tool_name, tool_input)
+        client = Client(server_url)
+
+        async with client:
+            result = await client.call_tool(
+                tool_name,
+                tool_input,
+                timeout=timeout,
+            )
+
         return {
             "tool": tool_name,
             "input": tool_input,
-            "output": result,
+            "output": result.data,
             "error": None,
             "timestamp": datetime.now().isoformat(),
         }
+
     except Exception as e:
         return {
             "tool": tool_name,
             "input": tool_input,
             "output": None,
-            "error": {"code": "MCP_CALL_FAILED", "reason": str(e)},
+            "error": {
+                "code": "MCP_CALL_FAILED",
+                "reason": str(e),
+            },
             "timestamp": datetime.now().isoformat(),
         }
-
 
 # ─────────────────────────────────────────────
 # Policy Analysis Logic
 # ─────────────────────────────────────────────
 
-def analyze_policy(task: str, chunks: list) -> dict:
-    """
-    Phân tích policy dựa trên context chunks.
+POLICY_ANALYSIS_SYSTEM_PROMPT = """
+Bạn là policy analyst cho hệ thống hỗ trợ khách hàng nội bộ.
 
-    TODO Sprint 2: Implement logic này với LLM call hoặc rule-based check.
+Nhiệm vụ:
+- Xác định policy/version nào dùng để xét case này.
+- Xác định policy có áp dụng cho case này không.
+- Xác định khách hàng có được hoàn tiền hay không.
+- Xác định các exception nếu có.
 
-    Cần xử lý các exceptions:
-    - Flash Sale → không được hoàn tiền
-    - Digital product / license key / subscription → không được hoàn tiền
-    - Sản phẩm đã kích hoạt → không được hoàn tiền
-    - Đơn hàng trước 01/02/2026 → áp dụng policy v3 (không có trong docs)
+Lưu ý rất quan trọng:
+- `policy_applies` KHÔNG có nghĩa là khách hàng được hoàn tiền.
+- `policy_applies` chỉ có nghĩa là case này thuộc phạm vi đánh giá của policy đó.
+- `refund_allowed` mới là kết luận cuối cùng về việc có được hoàn tiền hay không.
 
-    Returns:
-        dict with: policy_applies, policy_name, exceptions_found, source, rule, explanation
-    """
-    task_lower = task.lower()
-    context_text = " ".join([c.get("text", "") for c in chunks]).lower()
+QUY TẮC BẮT BUỘC:
+1. Nếu đơn hàng thuộc Flash Sale:
+   → refund_allowed = false
+   → bắt buộc thêm một exception với:
+      - type = "flash_sale_exception"
 
-    # --- Rule-based exception detection ---
-    exceptions_found = []
+2. Nếu sản phẩm là digital product / license key / subscription:
+   → refund_allowed = false
+   → bắt buộc thêm một exception với:
+      - type = "digital_product_exception"
 
-    # Exception 1: Flash Sale
-    if "flash sale" in task_lower or "flash sale" in context_text:
-        exceptions_found.append({
-            "type": "flash_sale_exception",
-            "rule": "Đơn hàng Flash Sale không được hoàn tiền (Điều 3, chính sách v4).",
-            "source": "policy_refund_v4.txt",
-        })
+3. Nếu sản phẩm đã kích hoạt / đã đăng ký / đã sử dụng:
+   → refund_allowed = false
+   → bắt buộc thêm một exception với:
+      - type = "activated_exception"
 
-    # Exception 2: Digital product
-    if any(kw in task_lower for kw in ["license key", "license", "subscription", "kỹ thuật số"]):
-        exceptions_found.append({
-            "type": "digital_product_exception",
-            "rule": "Sản phẩm kỹ thuật số (license key, subscription) không được hoàn tiền (Điều 3).",
-            "source": "policy_refund_v4.txt",
-        })
+4. Nếu đơn hàng trước 01/02/2026:
+   → áp dụng policy v3
+   → policy v3 không có trong docs hiện tại
+   → phải ghi rõ trong `policy_version_note` rằng policy v3 không có trong tài liệu hiện tại
+   → không được bịa nội dung chi tiết của policy v3 nếu context không cung cấp
 
-    # Exception 3: Activated product
-    if any(kw in task_lower for kw in ["đã kích hoạt", "đã đăng ký", "đã sử dụng"]):
-        exceptions_found.append({
-            "type": "activated_exception",
-            "rule": "Sản phẩm đã kích hoạt hoặc đăng ký tài khoản không được hoàn tiền (Điều 3).",
-            "source": "policy_refund_v4.txt",
-        })
+QUY TẮC SUY LUẬN:
+- Nếu case thuộc phạm vi xét của refund policy, thì `policy_applies = true`, kể cả khi `refund_allowed = false`.
+- Nếu có nhiều exception cùng lúc, phải trả về đầy đủ tất cả exception tương ứng.
+- Nếu không có exception nào, `exceptions_found` phải là [].
+- Không được tự tạo type khác cho 3 nhóm exception bắt buộc ở trên.
+- Với 3 nhóm exception bắt buộc, chỉ được dùng đúng 3 tên sau:
+  - "flash_sale_exception"
+  - "digital_product_exception"
+  - "activated_exception"
+- Không được dùng các tên gần nghĩa như:
+  - "activated_product_exception"
+  - "digital_exception"
+  - "subscription_exception"
+  - hoặc bất kỳ biến thể nào khác
 
-    # Determine policy_applies
-    policy_applies = len(exceptions_found) == 0
+RÀNG BUỘC CHẶT CHO `exceptions_found`:
+- Nếu task/context cho thấy đơn hàng thuộc Flash Sale, object exception phải có:
+  {
+    "type": "flash_sale_exception",
+    "rule": "Đơn hàng Flash Sale không được hoàn tiền.",
+    "source": "<nguồn phù hợp>"
+  }
 
-    # Determine which policy version applies (temporal scoping)
-    # TODO: Check nếu đơn hàng trước 01/02/2026 → v3 applies (không có docs, nên flag cho synthesis)
-    policy_name = "refund_policy_v4"
-    policy_version_note = ""
-    if "31/01" in task_lower or "30/01" in task_lower or "trước 01/02" in task_lower:
-        policy_version_note = "Đơn hàng đặt trước 01/02/2026 áp dụng chính sách v3 (không có trong tài liệu hiện tại)."
+- Nếu task/context cho thấy sản phẩm là digital product / license key / subscription, object exception phải có:
+  {
+    "type": "digital_product_exception",
+    "rule": "Sản phẩm kỹ thuật số, license key, hoặc subscription không được hoàn tiền.",
+    "source": "<nguồn phù hợp>"
+  }
 
-    # TODO Sprint 2: Gọi LLM để phân tích phức tạp hơn
-    # Ví dụ:
-    # from openai import OpenAI
-    # client = OpenAI()
-    # response = client.chat.completions.create(
-    #     model="gpt-4o-mini",
-    #     messages=[
-    #         {"role": "system", "content": "Bạn là policy analyst. Dựa vào context, xác định policy áp dụng và các exceptions."},
-    #         {"role": "user", "content": f"Task: {task}\n\nContext:\n" + "\n".join([c['text'] for c in chunks])}
-    #     ]
-    # )
-    # analysis = response.choices[0].message.content
+- Nếu task/context cho thấy sản phẩm đã kích hoạt / đã đăng ký / đã sử dụng, object exception phải có:
+  {
+    "type": "activated_exception",
+    "rule": "Sản phẩm đã kích hoạt, đã đăng ký, hoặc đã sử dụng không được hoàn tiền.",
+    "source": "<nguồn phù hợp>"
+  }
 
-    sources = list({c.get("source", "unknown") for c in chunks if c})
+QUY TẮC CHỌN SOURCE:
+- Ưu tiên source từ context chunks.
+- Nếu exception xuất hiện rõ trong task nhưng context không nêu rõ, vẫn phải kết luận theo quy tắc bắt buộc và có thể ghi source là "task".
 
-    return {
-        "policy_applies": policy_applies,
-        "policy_name": policy_name,
-        "exceptions_found": exceptions_found,
-        "source": sources,
-        "policy_version_note": policy_version_note,
-        "explanation": "Analyzed via rule-based policy check. TODO: upgrade to LLM-based analysis.",
+Schema JSON:
+{
+  "policy_applies": boolean,
+  "refund_allowed": boolean,
+  "policy_name": string,
+  "exceptions_found": [
+    {
+      "type": string,
+      "rule": string,
+      "source": string
     }
+  ],
+  "source": [string],
+  "policy_version_note": string,
+  "explanation": string
+}
+
+Định nghĩa:
+- `policy_applies` = true nếu case này thuộc phạm vi của policy được dùng để xét.
+- `refund_allowed` = true nếu theo policy và exceptions hiện có, khách hàng được hoàn tiền.
+- Nếu case đang được xét bằng refund policy thì thường `policy_applies = true`, kể cả khi `refund_allowed = false`.
+
+YÊU CẦU OUTPUT:
+- Trả về đúng 1 JSON object hợp lệ.
+- Không thêm markdown.
+- Không thêm giải thích ngoài JSON.
+- `exceptions_found[].type` phải tuân thủ tuyệt đối các tên exception bắt buộc đã nêu ở trên.
+""".strip()
+
+def analyze_policy(
+    task: str,
+    chunks: list[dict[str, Any]],
+    model: str = "gpt-4o-mini",
+    client: OpenAI | None = None,
+) -> dict[str, Any]:
+    if client is None:
+        client = OpenAI()
+
+    context_blocks: list[str] = []
+    source_set: set[str] = set()
+
+    for i, chunk in enumerate(chunks, start=1):
+        text = str(chunk.get("text", "")).strip()
+        source = str(chunk.get("source", "unknown")).strip() or "unknown"
+        score = chunk.get("score", None)
+
+        if source:
+            source_set.add(source)
+
+        context_blocks.append(
+            f"[CHUNK {i}]\n"
+            f"source: {source}\n"
+            f"score: {score}\n"
+            f"text: {text}\n"
+        )
+
+    context_text = "\n\n".join(context_blocks) if context_blocks else "[NO CONTEXT RETRIEVED]"
+
+    user_prompt = f"""
+Task cần phân tích:
+{task}
+
+Context policy đã retrieve:
+{context_text}
+
+Hãy phân tích task chỉ dựa trên context ở trên và trả về JSON đúng schema đã yêu cầu.
+""".strip()
+
+    try:
+        response = client.chat.completions.create(
+            model=model,
+            temperature=0,
+            response_format={"type": "json_object"},
+            messages=[
+                {"role": "system", "content": POLICY_ANALYSIS_SYSTEM_PROMPT},
+                {"role": "user", "content": user_prompt},
+            ],
+        )
+
+        raw_content = response.choices[0].message.content or "{}"
+        parsed = json.loads(raw_content)
+
+        result = {
+            "policy_applies": bool(parsed.get("policy_applies", False)),
+            "policy_name": str(parsed.get("policy_name", "unknown_policy")),
+            "exceptions_found": parsed.get("exceptions_found", []),
+            "source": parsed.get("source", sorted(source_set)),
+            "policy_version_note": str(parsed.get("policy_version_note", "")),
+            "explanation": str(parsed.get("explanation", "")),
+        }
+
+        if not isinstance(result["exceptions_found"], list):
+            result["exceptions_found"] = []
+
+        if not isinstance(result["source"], list):
+            result["source"] = sorted(source_set)
+
+        return result
+
+    except Exception as e:
+        return {
+            "policy_applies": False,
+            "policy_name": "analysis_failed",
+            "exceptions_found": [],
+            "source": sorted(source_set),
+            "policy_version_note": "",
+            "explanation": f"LLM policy analysis failed: {e}",
+        }
 
 
 # ─────────────────────────────────────────────
 # Worker Entry Point
 # ─────────────────────────────────────────────
 
-def run(state: dict) -> dict:
+async def run(state: dict) -> dict:
     """
     Worker entry point — gọi từ graph.py.
 
@@ -180,7 +303,7 @@ def run(state: dict) -> dict:
     try:
         # Step 1: Nếu chưa có chunks, gọi MCP search_kb
         if not chunks and needs_tool:
-            mcp_result = _call_mcp_tool("search_kb", {"query": task, "top_k": 3})
+            mcp_result = await _call_mcp_tool("search_kb", {"query": task, "top_k": 3})
             state["mcp_tools_used"].append(mcp_result)
             state["history"].append(f"[{WORKER_NAME}] called MCP search_kb")
 
@@ -194,7 +317,7 @@ def run(state: dict) -> dict:
 
         # Step 3: Nếu cần thêm info từ MCP (e.g., ticket status), gọi get_ticket_info
         if needs_tool and any(kw in task.lower() for kw in ["ticket", "p1", "jira"]):
-            mcp_result = _call_mcp_tool("get_ticket_info", {"ticket_id": "P1-LATEST"})
+            mcp_result = await _call_mcp_tool("get_ticket_info", {"ticket_id": "P1-LATEST"})
             state["mcp_tools_used"].append(mcp_result)
             state["history"].append(f"[{WORKER_NAME}] called MCP get_ticket_info")
 
@@ -249,7 +372,7 @@ if __name__ == "__main__":
 
     for tc in test_cases:
         print(f"\n▶ Task: {tc['task'][:70]}...")
-        result = run(tc.copy())
+        result = asyncio.run(run(tc.copy()))
         pr = result.get("policy_result", {})
         print(f"  policy_applies: {pr.get('policy_applies')}")
         if pr.get("exceptions_found"):

@@ -36,7 +36,7 @@ def _get_embedding_fn():
     # Option A: Sentence Transformers (offline, không cần API key)
     try:
         from sentence_transformers import SentenceTransformer
-        model = SentenceTransformer("all-MiniLM-L6-v2")
+        model = SentenceTransformer("BAAI/bge-m3")
         def embed(text: str) -> list:
             return model.encode([text])[0].tolist()
         return embed
@@ -70,14 +70,14 @@ def _get_collection():
     import chromadb
     client = chromadb.PersistentClient(path="./chroma_db")
     try:
-        collection = client.get_collection("day09_docs")
+        collection = client.get_collection("rag_lab")
     except Exception:
         # Auto-create nếu chưa có
         collection = client.get_or_create_collection(
-            "day09_docs",
+            "rag_lab",
             metadata={"hnsw:space": "cosine"}
         )
-        print(f"⚠️  Collection 'day09_docs' chưa có data. Chạy index script trong README trước.")
+        print(f"⚠️  Collection 'rag_lab' chưa có data. Chạy index script trong README trước.")
     return collection
 
 
